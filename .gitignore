@@ -1,0 +1,36 @@
+# 🐍 Python cache
+__pycache__/
+*.py[cod]
+
+# 📓 Jupyter Notebook
+*.ipynb_checkpoints/
+
+# 🧪 Virtual environments
+.venv/
+venv/
+.env/
+
+# 💾 Data & output
+data/
+*.csv
+*.xlsx
+*.log
+*.feather
+*.parquet
+
+# Ignore auto-generated reports and analysis summaries
+reports/
+*.pdf
+*.docx
+
+# 📈 Financial model exports
+outputs/
+plots/
+dashboards/
+
+# 📜 README tree tracking (auto-generated)
+project-tree.txt
+
+# 💻 IDE & OS settings
+.vscode/
+.DS_Store
