@@ -66,55 +66,21 @@ CI workflow is defined at:
 solar-challenge-week1/
 ├── LICENSE
 ├── README.md
-├── project-tree.txt
 ├── requirements.txt
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml
 │       ├── unittests.yml
 ├── data/
-│   ├── benin_clean.csv
-│   ├── sierra_leone_clean.csv
-│   ├── togo_clean.csv
 ├── notebooks/
-│   ├── benin_eda.ipynb
-│   ├── compare_countries.ipynb
-│   ├── sierra_leone_eda.ipynb
-│   ├── togo_eda.ipynb
-├── reports/
-│   ├── benin_missing_report.csv
-│   ├── benin_summary_stats.csv
-│   ├── sierra_leone_missing_report.csv
-│   ├── sierra_leone_summary_stats.csv
-│   ├── togo_missing_report.csv
-│   ├── togo_summary_stats.csv
-├── scripts/
 │   ├── README.md
 │   ├── __init__.py
+│   ├── task-1-news-sentiment-eda.ipynb
+├── scripts/
+│   ├── __init__.py
 │   ├── generate_tree.py
-│   ├── run_benin_pipeline.py
-│   ├── run_compare_pipeline.py
-│   ├── run_sierra_leone_pipeline.py
-│   ├── run_togo_pipeline.py
 ├── src/
 │   ├── __init__.py
-│   ├── clean.py
-│   ├── compare_pipeline.py
-│   ├── loader.py
-│   ├── plots.py
-│   ├── report.py
-│   ├── Benin/
-│   │   ├── __init__.py
-│   │   ├── benin-malanville.csv
-│   │   ├── load.py
-│   ├── Sierra_Leone/
-│   │   ├── __init__.py
-│   │   ├── load.py
-│   │   ├── sierraleone-bumbuna.csv
-│   └── Togo/
-│       ├── __init__.py
-│       ├── load.py
-│       ├── togo-dapaong_qc.csv
+│   ├── news_loader.py
 └── tests/
     ├── __init__.py
 <!-- TREE END -->

@@ -9,6 +9,7 @@ __pycache__/
 .venv/
 venv/
 .env/
+stock-market-challenge/
 
 # 💾 Data & output
 data/
