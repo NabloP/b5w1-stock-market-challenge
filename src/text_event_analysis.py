@@ -46,7 +46,18 @@ class EventExtractor:
                 f"spaCy model '{model}' not installed. Run: python -m spacy download {model}"
             )
         try:
-            self.doc_objects = list(self.nlp.pipe(headlines, disable=["parser"]))
+            try:
+                # Use batching to reduce memory footprint and avoid loading word vectors
+                self.doc_objects = list(
+                    self.nlp.pipe(
+                        headlines,
+                        disable=["parser", "tok2vec"],
+                        batch_size=100,  # Adjust batch size based on memory
+                    )
+                )
+            except Exception as e:
+                raise RuntimeError(f"Failed to parse headlines with spaCy: {e}")
+
         except Exception as e:
             raise RuntimeError(f"Failed to parse headlines with spaCy: {e}")
         if self.verbose:
