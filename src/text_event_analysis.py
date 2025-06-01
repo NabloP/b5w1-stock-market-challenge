@@ -32,7 +32,9 @@ from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
 
 
 class EventExtractor:
-    def __init__(self, headlines: List[str], model: str = "en_core_web_sm", verbose: bool = True):
+    def __init__(
+        self, headlines: List[str], model: str = "en_core_web_sm", verbose: bool = True
+    ):
         self.headlines = headlines
         self.verbose = verbose
         if not headlines:
@@ -40,21 +42,33 @@ class EventExtractor:
         try:
             self.nlp = spacy.load(model)
         except OSError:
-            raise RuntimeError(f"spaCy model '{model}' not installed. Run: python -m spacy download {model}")
+            raise RuntimeError(
+                f"spaCy model '{model}' not installed. Run: python -m spacy download {model}"
+            )
         try:
             self.doc_objects = list(self.nlp.pipe(headlines, disable=["parser"]))
         except Exception as e:
             raise RuntimeError(f"Failed to parse headlines with spaCy: {e}")
         if self.verbose:
-            print(f"✅ Loaded {len(self.headlines)} headlines and parsed with model '{model}'.")
+            print(
+                f"✅ Loaded {len(self.headlines)} headlines and parsed with model '{model}'."
+            )
 
-    def extract_named_entities(self, allowed_labels: Optional[List[str]] = None) -> pd.DataFrame:
+    def extract_named_entities(
+        self, allowed_labels: Optional[List[str]] = None
+    ) -> pd.DataFrame:
         allowed_labels = allowed_labels or ["ORG", "GPE", "MONEY", "DATE", "EVENT"]
         records = []
         for doc, headline in zip(self.doc_objects, self.headlines):
             for ent in doc.ents:
                 if ent.label_ in allowed_labels:
-                    records.append({"headline": headline, "entity_text": ent.text, "label": ent.label_})
+                    records.append(
+                        {
+                            "headline": headline,
+                            "entity_text": ent.text,
+                            "label": ent.label_,
+                        }
+                    )
         df = pd.DataFrame(records)
         if self.verbose:
             print(f"🔍 Extracted {len(df)} named entities from headlines.")
@@ -74,20 +88,36 @@ class EventExtractor:
 
     def extract_event_phrases(self) -> pd.DataFrame:
         financial_keywords = [
-            "merger", "acquisition", "hike", "cut", "lawsuit", "dividend", "split",
-            "earnings", "ipo", "bankruptcy", "investigation", "fine", "forecast",
-            "downgrade", "upgrade", "guidance", "expansion"
+            "merger",
+            "acquisition",
+            "hike",
+            "cut",
+            "lawsuit",
+            "dividend",
+            "split",
+            "earnings",
+            "ipo",
+            "bankruptcy",
+            "investigation",
+            "fine",
+            "forecast",
+            "downgrade",
+            "upgrade",
+            "guidance",
+            "expansion",
         ]
         results = []
         for doc, headline in zip(self.doc_objects, self.headlines):
             for chunk in doc.noun_chunks:
                 phrase = chunk.text.lower()
                 if any(k in phrase for k in financial_keywords):
-                    results.append({
-                        "headline": headline,
-                        "event_phrase": phrase,
-                        "extraction_method": "KeywordBased"
-                    })
+                    results.append(
+                        {
+                            "headline": headline,
+                            "event_phrase": phrase,
+                            "extraction_method": "KeywordBased",
+                        }
+                    )
         df = pd.DataFrame(results)
         if self.verbose:
             print(f"📌 Identified {len(df)} candidate financial event phrases.")
@@ -100,7 +130,9 @@ class EventExtractor:
                 print("⚠️ No event phrases extracted. Skipping frequency computation.")
             return pd.DataFrame(columns=["event_phrase", "frequency"])
         freq_counter = Counter(event_df["event_phrase"])
-        freq_df = pd.DataFrame(freq_counter.items(), columns=["event_phrase", "frequency"])
+        freq_df = pd.DataFrame(
+            freq_counter.items(), columns=["event_phrase", "frequency"]
+        )
         freq_df = freq_df.sort_values(by="frequency", ascending=False)
         if self.verbose:
             print(f"📊 Computed frequencies for {len(freq_df)} unique event phrases.")
@@ -121,7 +153,9 @@ class EventExtractor:
         if self.verbose:
             print(f"📈 Plotted top {top_n} financial event phrases.")
 
-    def extract_combined_events(self, rebel_model: "EventExtractorREBEL", sample_size: int = 1000) -> pd.DataFrame:
+    def extract_combined_events(
+        self, rebel_model: "EventExtractorREBEL", sample_size: int = 1000
+    ) -> pd.DataFrame:
         """Uses REBEL for sampled subset and keyword-based extraction for remaining."""
         if len(self.headlines) <= sample_size:
             sample_headlines = self.headlines
@@ -133,11 +167,15 @@ class EventExtractor:
         rebel_df = rebel_model.extract_triplets(sample_headlines)
         rebel_df["extraction_method"] = "REBEL"
 
-        fallback_events = EventExtractor(fallback_headlines, verbose=False).extract_event_phrases()
+        fallback_events = EventExtractor(
+            fallback_headlines, verbose=False
+        ).extract_event_phrases()
 
         combined = pd.concat([rebel_df, fallback_events], ignore_index=True, sort=False)
         if self.verbose:
-            print(f"🧩 Combined REBEL triplets ({len(rebel_df)}) and keyword phrases ({len(fallback_events)}).")
+            print(
+                f"🧩 Combined REBEL triplets ({len(rebel_df)}) and keyword phrases ({len(fallback_events)})."
+            )
         return combined
 
 
@@ -154,11 +192,15 @@ class EventTimelineAnalyzer:
             if self.verbose:
                 print("⚠️ 'cleaned_date' column missing. Initialized with NaT.")
         else:
-            self.df["cleaned_date"] = pd.to_datetime(self.df["cleaned_date"], errors="coerce")
+            self.df["cleaned_date"] = pd.to_datetime(
+                self.df["cleaned_date"], errors="coerce"
+            )
             if self.df["cleaned_date"].isna().all():
                 print("⚠️ All 'cleaned_date' values are NaT.")
             elif self.df["cleaned_date"].isna().any():
-                print(f"⚠️ {self.df['cleaned_date'].isna().sum()} rows have unparseable dates.")
+                print(
+                    f"⚠️ {self.df['cleaned_date'].isna().sum()} rows have unparseable dates."
+                )
         if self.verbose:
             print(f"✅ EventTimelineAnalyzer initialized with {len(self.df)} rows.")
 
@@ -182,10 +224,23 @@ class EventTimelineAnalyzer:
             print("⚠️ Skipping plot. No timeline data available.")
             return
         plt.figure(figsize=(12, 5))
-        plt.plot(counts_df["cleaned_date"], counts_df["event_count"], label="Daily Events", marker="o", linewidth=2)
+        plt.plot(
+            counts_df["cleaned_date"],
+            counts_df["event_count"],
+            label="Daily Events",
+            marker="o",
+            linewidth=2,
+        )
         if rolling_window > 1:
-            counts_df["rolling_avg"] = counts_df["event_count"].rolling(rolling_window).mean()
-            plt.plot(counts_df["cleaned_date"], counts_df["rolling_avg"], label=f"{rolling_window}-Day Avg", linestyle="--")
+            counts_df["rolling_avg"] = (
+                counts_df["event_count"].rolling(rolling_window).mean()
+            )
+            plt.plot(
+                counts_df["cleaned_date"],
+                counts_df["rolling_avg"],
+                label=f"{rolling_window}-Day Avg",
+                linestyle="--",
+            )
         plt.title("📈 Financial Event Count Over Time")
         plt.xlabel("Date")
         plt.ylabel("Event Count")
@@ -198,19 +253,25 @@ class EventTimelineAnalyzer:
 
 
 class EventExtractorREBEL:
-    def __init__(self, model_name: str = "Babelscape/rebel-large", verbose: bool = True):
+    def __init__(
+        self, model_name: str = "Babelscape/rebel-large", verbose: bool = True
+    ):
         self.verbose = verbose
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(model_name)
             self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-            self.generator = pipeline("text2text-generation", model=self.model, tokenizer=self.tokenizer)
+            self.generator = pipeline(
+                "text2text-generation", model=self.model, tokenizer=self.tokenizer
+            )
         except Exception as e:
             raise RuntimeError(f"❌ Failed to load REBEL model '{model_name}': {e}")
         if self.verbose:
             print(f"✅ REBEL model '{model_name}' loaded.")
 
     def _parse_triplets(self, generated_text: str):
-        triplet_regex = r"<triplet> (.*?) <relation> (.*?) <object> (.*?)(?=<triplet>|$)"
+        triplet_regex = (
+            r"<triplet> (.*?) <relation> (.*?) <object> (.*?)(?=<triplet>|$)"
+        )
         return re.findall(triplet_regex, generated_text)
 
     def extract_triplets(self, headlines: List[str]) -> pd.DataFrame:
@@ -219,18 +280,24 @@ class EventExtractorREBEL:
             print(f"🔍 Extracting REBEL triplets from {len(headlines)} headlines...")
         for headline in headlines:
             try:
-                output = self.generator(f"<triplet> {headline}", max_length=256)[0]["generated_text"]
+                output = self.generator(f"<triplet> {headline}", max_length=256)[0][
+                    "generated_text"
+                ]
                 triplets = self._parse_triplets(output)
                 for subj, rel, obj in triplets:
-                    results.append({
-                        "headline": headline,
-                        "subject": subj.strip(),
-                        "relation": rel.strip(),
-                        "object": obj.strip(),
-                    })
+                    results.append(
+                        {
+                            "headline": headline,
+                            "subject": subj.strip(),
+                            "relation": rel.strip(),
+                            "object": obj.strip(),
+                        }
+                    )
             except Exception as e:
                 if self.verbose:
-                    print(f"⚠️ Skipped headline due to extraction error:\n   {headline}\n   {e}")
+                    print(
+                        f"⚠️ Skipped headline due to extraction error:\n   {headline}\n   {e}"
+                    )
         df = pd.DataFrame(results)
         if self.verbose:
             print(f"📊 Extracted {len(df)} triplets.")
