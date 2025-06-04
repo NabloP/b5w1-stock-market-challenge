@@ -1,4 +1,4 @@
-""" Script to auto-update README with a project tree """
+"""Script to auto-update README with a project tree"""
 
 import os
 import sys
@@ -7,16 +7,23 @@ from pathlib import Path
 README_PATH = Path("README.md")
 TREE_START = "<!-- TREE START -->"
 TREE_END = "<!-- TREE END -->"
-EXCLUDE_DIRS = {"venv", "__pycache__", ".mypy_cache", ".pytest_cache", ".ruff_cache"}
+EXCLUDE_DIRS = {
+    "stock-market-challenge",
+    "__pycache__",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+}
+
 
 def generate_tree(root=".", prefix=""):
     tree = []
     try:
         entries = sorted(os.listdir(root))
         entries = [
-            e for e in entries
-            if e not in EXCLUDE_DIRS
-            and (not e.startswith(".") or e == ".github")
+            e
+            for e in entries
+            if e not in EXCLUDE_DIRS and (not e.startswith(".") or e == ".github")
         ]
 
         files = [e for e in entries if os.path.isfile(os.path.join(root, e))]
@@ -28,7 +35,9 @@ def generate_tree(root=".", prefix=""):
             path = os.path.join(root, dir)
             branch = "└──" if i == len(dirs) - 1 else "├──"
             tree.append(f"{prefix}{branch} {dir}/")
-            subtree = generate_tree(path, prefix + ("    " if i == len(dirs) - 1 else "│   "))
+            subtree = generate_tree(
+                path, prefix + ("    " if i == len(dirs) - 1 else "│   ")
+            )
             tree.extend(subtree)
 
     except Exception as e:
@@ -36,6 +45,7 @@ def generate_tree(root=".", prefix=""):
         return []
 
     return tree
+
 
 def inject_tree_into_readme(tree_lines):
     if not README_PATH.exists():
@@ -49,9 +59,7 @@ def inject_tree_into_readme(tree_lines):
         new_tree = (
             f"{TREE_START}\n"
             "📁 Project Structure\n\n"
-            "solar-challenge-week1/\n"
-            + "\n".join(tree_lines)
-            + f"\n{TREE_END}"
+            "solar-challenge-week1/\n" + "\n".join(tree_lines) + f"\n{TREE_END}"
         )
 
         if TREE_START in content and TREE_END in content:
@@ -70,6 +78,7 @@ def inject_tree_into_readme(tree_lines):
     except Exception as e:
         print(f"❌ Failed to update README.md: {e}")
         return 1
+
 
 if __name__ == "__main__":
     print("🔄 Generating project tree and updating README...")
