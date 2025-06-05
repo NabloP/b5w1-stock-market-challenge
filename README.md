@@ -91,13 +91,19 @@ solar-challenge-week1/
 │   ├── __init__.py
 │   ├── task-1-news-sentiment-eda.ipynb
 │   ├── task-2-quantitative-analysis.ipynb
+│   ├── task-3-correlation-news-stock-movement.ipynb
 ├── scripts/
 │   ├── __init__.py
+│   ├── correlation_analysis_orchestrator.py
 │   ├── eda_orchestrator.py
 │   ├── generate_tree.py
 │   ├── quantitative_analysis_orchestrator.py
 ├── src/
 │   ├── __init__.py
+│   ├── correlation_analyzer.py
+│   ├── correlation_data_loader.py
+│   ├── correlation_sentiment_aggregator.py
+│   ├── correlation_visualizer.py
 │   ├── news_loader.py
 │   ├── price_data_loader.py
 │   ├── sentiment_return_aligner.py
@@ -272,6 +278,53 @@ While plots were not auto-saved, the script includes logic for:
 - Displaying divergence signals
 
 These can be manually run via notebook for exploratory analysis or integrated into future automated runs.
+
+### 🧠 How the `correlation_analysis_orchestrator.py` Pipeline Works
+
+This script runs the Task 3 pipeline for the B5W1 challenge: computing statistical correlations between sentiment signals and subsequent stock price movements. It leverages exponentially weighted sentiment aggregation, multiple correlation methods, and ticker-specific diagnostics.
+
+📍 The script is designed to be run from the project root. All visual outputs and correlation results are generated in-memory for flexible inspection and downstream reporting.
+
+---
+
+### 🔁 Pipeline Steps
+
+#### 1. Load Aligned Sentiment–Price Data
+- Reads the merged output from Task 2: `data/outputs/enriched_aligned_df.csv`
+- Validates schema, coerces timestamp formats, and standardizes tickers.
+
+#### 2. Daily Sentiment Aggregation
+- Applies exponential decay (λ = 0.5) to compute rolling sentiment scores per ticker and date.
+- Aggregated scores are stored in `agg_sentiment_ewm`.
+
+#### 3. Correlation Feature Selection
+- Dynamically selects sentiment features (e.g., `weighted_sentiment`, `agg_sentiment_ewm`) and return features (e.g., `forward_return_1d`, `return_t`, etc.).
+- Ensures all required columns are available before analysis proceeds.
+
+#### 4. Correlation Computation
+- Computes per-ticker correlation matrices using:
+  - Pearson (linear)
+  - Spearman (rank-based)
+  - Kendall (ordinal)
+- Results include ticker, method, variable pairs, and correlation strength.
+
+#### 5. Visual Diagnostics
+- Plots Pearson heatmaps to show cross-variable correlation intensities.
+- Displays top-N strongest Spearman correlations across tickers.
+- Generates scatter plots for specific ticker–signal pairs (e.g., `AAPL`, `agg_sentiment_ewm` vs `forward_return_1d`).
+
+---
+
+### 📦 Outputs
+
+- Correlation results are stored in-memory (`correlation_df`) and can be exported manually via notebook or extended pipeline logic.
+- Visual plots are shown interactively and can be saved as needed (e.g., PNGs via `visualizer.save_plot()`).
+
+---
+
+### 🧪 Diagnostic Highlights
+- Dynamic error handling ensures fallback when features or tickers are missing.
+- Verbose logging prints sample data previews, correlation strength diagnostics, and failure contexts for debugging.
 
 ## 🧠 Design Philosophy
 This project was developed with a focus on:
